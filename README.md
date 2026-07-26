@@ -25,6 +25,24 @@ g++ StoryForge.cpp -o StoryForge -std=c++11
 ./StoryForge
 ```
 
-## Next up
+Phase 2
 
-App loop, pitch sorting, saving/loading the story, terminal UI.
+Backend layer for identity tracking and file storage.
+
+A Session class that tracks the currently loggedin user (login(), getCurrentUser())
+A Database class that holds all paragraphs and pitches, with:
+addParagraph() / addPitch()
+saveToFile() / loadFromFile() — reads and writes everything to story_db.json
+isEditor() which checks whether the current session user matches the author of the latest paragraph before allowing pitch moderation
+displayAllData() that prints all loaded paragraphs and pitches
+setStatus() added to Pitch for updating a pitch's status after moderation
+
+main() in StoryForge.cpp manually tests all of the above functions (logging in, adding data, checking editor access, saving, and reloading from file.)
+
+Running it
+
+Needs json.hpp (nlohmann/json) in the same folder.
+
+bash
+g++ StoryForge.cpp -o StoryForge -std=c++11
+./StoryForge
