@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include "json.hpp"
+#include <fstream>
 using json = nlohmann::json;
 using namespace std;
 class Paragraph
@@ -50,6 +51,10 @@ public:
     void display_paragraph() const
     {
         cout << "Paragraph " << id << " by " << author << " : " << text << endl;
+    }
+    string getAuthor() const
+    {
+        return author;
     }
 };
 
@@ -109,38 +114,137 @@ public:
     {
         cout << "Pitch " << id << " by " << author << " : " << text << " Status: " << status << endl;
     }
+    void setStatus(string newStatus)
+    {
+        status = newStatus;
+    }
+    string getStatus() const { return status; }
 };
+
+class Session
+{
+    string current_user;
+
+public:
+    Session() : current_user("") {}
+    void login(string name)
+    {
+        current_user = name;
+    }
+    string getCurrentUser()
+    {
+        return current_user;
+    }
+};
+
+class Database
+{
+
+    vector<Paragraph> paragraphs;
+    vector<Pitch> pitches;
+
+public:
+    void addParagraph(Paragraph p)
+    {
+        paragraphs.push_back(p);
+    }
+
+    void addPitch(Pitch x)
+    {
+        pitches.push_back(x);
+    }
+
+    bool isEditor(Session &session)
+    {
+        if (paragraphs.empty())
+        {
+            cout << "NO PARAGRAPHS YET — NO EDITOR ASSIGNED." << endl;
+            return false;
+        }
+        if (paragraphs.back().getAuthor() == session.getCurrentUser())
+        {
+            cout << "USERNAME MATCHED." << endl;
+            return true;
+        }
+        cout << "USERNAME NOT FOUND!" << endl;
+        return false;
+    }
+
+    void saveToFile()
+    {
+        json paragraphArray = json::array();
+        json pitchArray = json::array();
+        for (Paragraph p : paragraphs)
+        {
+            paragraphArray.push_back(p.to_dict());
+        }
+        for (Pitch x : pitches)
+        {
+            pitchArray.push_back(x.to_dict());
+        }
+        json array;
+        array["Paragraph"] = paragraphArray;
+        array["Pitch"] = pitchArray;
+
+        ofstream file("story_db.json");
+        file << array.dump(4);
+        cout << "DATA SAVED SUCESSFULLY!" << endl;
+        file.close();
+    }
+
+    void loadFromFile()
+    {
+        cout << "LOADING SAVED DATA..." << endl;
+        ifstream file("story_db.json");
+        if (!file)
+        {
+            cout << "NO SAVED DATA FOUND! STARTING FRESH..." << endl;
+            return;
+        }
+        json data;
+        file >> data;
+        for (json item : data["Paragraph"])
+        {
+            Paragraph p = Paragraph::from_dict(item);
+            paragraphs.push_back(p);
+        }
+        for (json item : data["Pitch"])
+        {
+            Pitch x = Pitch::from_dict(item);
+            pitches.push_back(x);
+        }
+    }
+
+    void displayAllData()
+    {
+        for (Paragraph p : paragraphs)
+        {
+            p.display_paragraph();
+        }
+        for (Pitch x : pitches)
+        {
+            x.display_pitch();
+        }
+    }
+};
+
 int main()
 {
-    Paragraph p(1, "Once upon a time", "Amna", 1);
-    json j = p.to_dict();
-    cout << j.dump() << endl;
-    Paragraph p2 = Paragraph::from_dict(j);
-    cout << p2.to_dict().dump() << endl;
-    p.display_paragraph();
-    try
-    {
-        Paragraph badP(-1, "text", "Amna", 1);
-    }
-    catch (const invalid_argument &e)
-    {
-        cout << "Error: " << e.what() << endl;
-    }
+    // Testing Phase 02
+    Session s;
+    s.login("Amna");
+    Database d;
+    Paragraph p(1, "Hi this is my first paragraph.", "Amna", 1);
+    d.addParagraph(p);
+    Pitch x(1, 1, "This is my first pitch.", "Ali", "Pending");
+    d.addPitch(x);
+    d.isEditor(s);
+    s.login("Ali");
+    d.isEditor(s);
+    d.saveToFile();
 
-    Pitch x(1, 1, "there was a town called Kops.", "Anum", "Pending");
-    json a = x.to_dict();
-    cout << a.dump() << endl;
-    Pitch x2 = Pitch::from_dict(a);
-    cout << x2.to_dict().dump() << endl;
-    x.display_pitch();
-    try
-    {
-        Pitch badX(1, 1, "text", "Anum", "none");
-    }
-    catch (const invalid_argument &e)
-    {
-        cout << "Error: " << e.what() << endl;
-    }
-
+    Database a;
+    a.loadFromFile();
+    a.displayAllData();
     return 0;
 }
