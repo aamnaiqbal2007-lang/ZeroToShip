@@ -56,6 +56,10 @@ public:
     {
         return author;
     }
+    int getOrder_num() const
+    {
+        return order_num;
+    }
 };
 
 class Pitch
@@ -118,6 +122,10 @@ public:
     {
         status = newStatus;
     }
+    int getId() const { return id; }
+    int getTargetOrderNum() const { return target_order_num; }
+    string getText() const { return text; }
+    string getAuthor() const { return author; }
     string getStatus() const { return status; }
 };
 
@@ -152,6 +160,13 @@ public:
     void addPitch(Pitch x)
     {
         pitches.push_back(x);
+    }
+    void createPitch(string text, string author)
+    {
+        int newId = pitches.size() + 1;
+        int target_order_num = paragraphs.back().getOrder_num() + 1;
+        Pitch newP(newId, target_order_num, text, author);
+        pitches.push_back(newP);
     }
 
     bool isEditor(Session &session)
@@ -217,34 +232,78 @@ public:
 
     void displayAllData()
     {
+        cout << "-----PARAGRAPH-----" << endl;
         for (Paragraph p : paragraphs)
         {
             p.display_paragraph();
         }
+        cout << "-------ALL PITCHES-------" << endl;
         for (Pitch x : pitches)
         {
             x.display_pitch();
+        }
+    }
+
+    void sortParagraphs()
+    {
+        sort(paragraphs.begin(), paragraphs.end(), [](Paragraph a, Paragraph b)
+             { return a.getOrder_num() < b.getOrder_num(); });
+    }
+
+    void acceptPitch(int pitchId)
+    {
+        bool found = false;
+        if (paragraphs.empty())
+        {
+            cout << "NO PARAGRAPHS EXISTS YET-CANNOT ACCEPT A PITCH!." << endl;
+            return;
+        }
+        for (Pitch &x : pitches)
+        {
+            if (x.getId() == pitchId)
+            {
+                found = true;
+                string text = x.getText();
+                string author = x.getAuthor();
+                int target_order_num = x.getTargetOrderNum();
+                int new_order_num = paragraphs.back().getOrder_num() + 1;
+                int new_id = paragraphs.size() + 1;
+                Paragraph newP(new_id, text, author, new_order_num);
+                paragraphs.push_back(newP);
+                for (Pitch &y : pitches)
+                {
+                    if (y.getTargetOrderNum() == new_order_num)
+                    {
+                        if (y.getId() == pitchId)
+                        {
+                            y.setStatus("Accepted");
+                        }
+                        else
+                        {
+                            y.setStatus("Rejected");
+                        }
+                    }
+                }
+            }
+        }
+        if (!found)
+        {
+            cout << "NO PITCH FOUND WITH THAT ID!" << endl;
         }
     }
 };
 
 int main()
 {
-    // Testing Phase 02
+    // Testing Phase 03
     Session s;
     s.login("Amna");
     Database d;
-    Paragraph p(1, "Hi this is my first paragraph.", "Amna", 1);
+    Paragraph p(1, "This is the starting paragraph.", "Amna", 1);
     d.addParagraph(p);
-    Pitch x(1, 1, "This is my first pitch.", "Ali", "Pending");
-    d.addPitch(x);
-    d.isEditor(s);
-    s.login("Ali");
-    d.isEditor(s);
-    d.saveToFile();
-
-    Database a;
-    a.loadFromFile();
-    a.displayAllData();
+    d.createPitch("This is my first pitch.", "Ali");
+    d.createPitch("This is my first pitch.", "Anum");
+    d.acceptPitch(1);
+    d.displayAllData();
     return 0;
 }

@@ -43,3 +43,23 @@ Needs json.hpp (nlohmann/json) in the same folder.
 
 g++ StoryForge.cpp -o StoryForge -std=c++11
 ./StoryForge
+
+
+## Phase 3
+
+Core story logic — sorting and the accept/reject pipeline.
+
+- sortParagraphs() function that sorts paragraphs by order_num using std::sort with a lambda
+- acceptPitch(pitchId) — the main pipeline:
+- creates a new Paragraph from the accepted pitch (order_num = latest + 1)
+- rejects every other pitch competing for that same position
+- handles edge cases: no paragraphs yet, or pitch ID not found
+- createPitch(text, author) — automatically calculates a new pitch's id and target_order_num, so the caller never has to guess or assign them manually
+- main() in StoryForge.cpp manually tests all of the above (logging in, adding data, checking editor access, saving/reloading from file, and running the accept-pitch pipeline on competing pitches.)
+
+## Running it
+
+Needs json.hpp (nlohmann/json) in the same folder.
+
+g++ StoryForge.cpp -o StoryForge -std=c++11
+./StoryForge
