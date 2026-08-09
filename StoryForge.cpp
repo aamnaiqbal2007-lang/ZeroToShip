@@ -15,9 +15,10 @@ class Paragraph
     string text;
     string author;
     int order_num;
+    string category;
 
 public:
-    Paragraph(int i, string t, string a, int o) : id(i), text(t), author(a), order_num(o)
+    Paragraph(int i, string t, string a, int o, string c) : id(i), text(t), author(a), order_num(o), category(c)
     {
         if (i <= 0)
         {
@@ -43,6 +44,7 @@ public:
         j["text"] = text;
         j["author"] = author;
         j["order_num"] = order_num;
+        j["category"] = category;
         return j;
     }
     static Paragraph from_dict(const json &j)
@@ -51,7 +53,8 @@ public:
         string y = j["text"];
         string z = j["author"];
         int a = j["order_num"];
-        return Paragraph(x, y, z, a);
+        string b = j["category"];
+        return Paragraph(x, y, z, a, b);
     }
     void display_paragraph() const
     {
@@ -67,6 +70,9 @@ public:
     string getText() const {
         return text;
     }
+    string getcategory() const{
+        return category; 
+    }
 };
 
 class Pitch
@@ -76,9 +82,10 @@ class Pitch
     string text;
     string author;
     string status;
+    string category;
 
 public:
-    Pitch(int i, int o, string t, string a, string s) : id(i), target_order_num(o), text(t), author(a), status(s)
+    Pitch(int i, int o, string t, string a, string s, string c) : id(i), target_order_num(o), text(t), author(a), status(s), category(c)
     {
         if (i <= 0)
         {
@@ -101,7 +108,7 @@ public:
             throw invalid_argument("Pitch status is not valid!");
         }
     }
-    Pitch(int i, int o, string t, string a) : Pitch(i, o, t, a, "Pending") {}
+    Pitch(int i, int o, string t, string a, string c) : Pitch(i, o, t, a, "Pending", c) {}
     json to_dict() const
     {
         json j;
@@ -110,6 +117,7 @@ public:
         j["text"] = text;
         j["author"] = author;
         j["status"] = status;
+        j["category"] = category;
         return j;
     }
     static Pitch from_dict(const json &j)
@@ -119,7 +127,8 @@ public:
         string c = j["text"];
         string d = j["author"];
         string e = j["status"];
-        return Pitch(a, b, c, d, e);
+        string f = j["category"];
+        return Pitch(a, b, c, d, e, f);
     }
     void display_pitch() const
     {
@@ -133,6 +142,7 @@ public:
     string getText() const { return text; }
     string getAuthor() const { return author; }
     string getStatus() const { return status; }
+    string getCategory() const { return category; }
 };
 
 class Session {
@@ -152,6 +162,51 @@ struct storyTemplate {
     string idea;
     string templateText;
 };
+
+int getValidInput(int min, int max){
+    int choice;
+    while(true){
+        if(!(cin >> choice)){
+            cin.clear();
+            cin.ignore(1000, '\n');
+            cout<<"INVALID! Enter a number between "<<min<<" and "<<max<<": ";
+        }
+        else if(choice < min || choice > max){
+            cin.ignore();
+            cout<<"INVALID! Enter a number between "<<min<<" and "<<max<<": ";
+        }
+        else{
+            cin.ignore();
+            return choice;
+        }
+    }
+}
+
+string selectCategory(){
+    cout<<"\n=============SELECT A CATEGORY=============="<<endl;
+    cout<<"[1] Fantasy"<<endl;
+    cout<<"[2] Science-Fiction"<<endl;
+    cout<<"[3] Crime/Mystery"<<endl;
+    cout<<"[4] Romance"<<endl;
+    cout<<"[5] Adventure"<<endl;
+    cout<<"[6] Psychological Thriler"<<endl;
+    cout<<"[7] Comic"<<endl;
+    cout<<"[8] Horror"<<endl;
+    cout<<"Enter your Choice: ";
+    int catChoice = getValidInput(1, 8);
+    if(catChoice == 1){ return "Fantasy"; }
+    else if(catChoice == 2){ return "Sci-Fi";}
+    else if(catChoice == 3){ return "Crime/Mystery";}
+    else if(catChoice == 4){ return "Romance";}
+    else if(catChoice == 5){ return "Adventure";}
+    else if(catChoice == 6){ return "Psychological Thriller";}
+    else if(catChoice == 7){ return "Comic";}
+    else if(catChoice == 8){ return "Horror";}
+    else{ 
+        cout<<"INVALID CHOICE! SELECTING FANTASY BY DEFAULT."<<endl;
+        return "Fantasy";
+     }
+}
 
 class Database {
     vector<Paragraph> paragraphs;
@@ -186,16 +241,15 @@ public:
 
         ofstream file("story_db.json");
         file << array.dump(4);
-        cout << "DATA SAVED SUCESSFULLY!" << endl;
         file.close();
     }
 
     void loadFromFile() {
-        cout << "LOADING SAVED DATA..." << endl;
         ifstream file("story_db.json");
         if (!file) {
-            cout << "No saved data found, starting fresh." << endl;
-            return;
+        Paragraph defaultP(1, "The glowing terminal screen blinked in the empty computer lab...", "System", 1, "General");
+        paragraphs.push_back(defaultP);
+        return;
         }
         json data;
         file >> data;
@@ -209,34 +263,64 @@ public:
         }
     }
 
-    bool isEditor(Session &session) {
-        if (paragraphs.empty()) {
-            cout << "No paragraphs yet — no editor assigned." << endl;
-            return false;
+    bool isEditor(Session &session, string category) {
+    Paragraph* lastPara = nullptr;
+    for (Paragraph& p : paragraphs) {
+        if (p.getcategory() == category) {
+            lastPara = &p;
         }
-        if (paragraphs.back().getAuthor() == session.getCurrentUser()) {
-            cout << "USERNAME MATCHED." << endl;
-            return true;
-        }
-        cout << "USERNAME NOT FOUND!" << endl;
+    }
+    if (lastPara == nullptr) {
         return false;
     }
-
-    void displayAllData() {
-        cout << "-----PARAGRAPH-----" << endl;
-        for (Paragraph p : paragraphs) {
-            p.display_paragraph();
-        }
-        cout << "-------ALL PITCHES-------" << endl;
-        for (Pitch x : pitches) {
-            x.display_pitch();
-        }
+    if (lastPara->getAuthor() == session.getCurrentUser()) {
+        return true;
+    }
+    return false;
     }
 
     void sortParagraphs() {
         sort(paragraphs.begin(), paragraphs.end(), [](Paragraph a, Paragraph b) {
             return a.getOrder_num() < b.getOrder_num();
         });
+    }
+
+    bool storyExists(string category){
+        for(Paragraph p: paragraphs){
+            if(p.getcategory() == category){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void createPitch(string text, string author, string category) {
+        int newId = pitches.size() + 1;
+        int target_order_num = getLastOrderNum(category) + 1;
+        Pitch newP(newId, target_order_num, text, author, category);
+        pitches.push_back(newP);
+    }
+
+    int getLastOrderNum(string category){
+        int lastOrder=0;
+        for(Paragraph p: paragraphs){
+            if(p.getcategory() == category && p.getOrder_num() > lastOrder){
+                lastOrder = p.getOrder_num();
+            }
+        }
+        return lastOrder;
+    }
+
+    string getLastAuthor(string category){
+    string lastAuthor = "";
+    int lastOrder = 0;
+    for(Paragraph p: paragraphs){
+        if(p.getcategory() == category && p.getOrder_num() > lastOrder){
+            lastOrder = p.getOrder_num();
+            lastAuthor = p.getAuthor();
+        }
+    }
+    return lastAuthor;
     }
 
     void acceptPitch(int pitchId) {
@@ -248,15 +332,20 @@ public:
         for (Pitch &x : pitches) {
             if (x.getid() == pitchId) {
                 found = true;
+                if(x.getAuthor() == getLastAuthor(x.getCategory())){
+                    cout<<"A USER CANNOT ACCEPT ITS OWN PITCH!"<<endl;
+                    return;
+                }
                 string text = x.getText();
                 string author = x.getAuthor();
                 int target_order_num = x.getTargetOrderNum();
-                int new_order_num = paragraphs.back().getOrder_num() + 1;
+                string category = x.getCategory();
+                int new_order_num = getLastOrderNum(x.getCategory()) + 1;
                 int new_id = paragraphs.size() + 1;
-                Paragraph newP(new_id, text, author, new_order_num);
+                Paragraph newP(new_id, text, author, new_order_num,category );
                 paragraphs.push_back(newP);
                 for (Pitch &y : pitches) {
-                    if (y.getTargetOrderNum() == new_order_num) {
+                    if (y.getTargetOrderNum() == new_order_num && y.getCategory() == category){
                         if (y.getid() == pitchId) {
                             y.setStatus("Accepted");
                         } else {
@@ -271,13 +360,6 @@ public:
         }
     }
 
-    void createPitch(string text, string author) {
-        int newId = pitches.size() + 1;
-        int target_order_num = paragraphs.back().getOrder_num() + 1;
-        Pitch newP(newId, target_order_num, text, author);
-        pitches.push_back(newP);
-    }
-
     void loadTemplates() {
         storyTemplate t1 = {"Fantasy", "A kingdom hidden behind a waterfall, where the last dragon has been asleep for a hundred years.", "In the kingdom of Eldenmoor, mist clung to every ancient stone. The old stories said the dragon beneath the mountain would wake only when the crown chose an unworthy heir and tonight, the crown had chosen."};
         templates.push_back(t1);
@@ -289,7 +371,7 @@ public:
         templates.push_back(t4);
         storyTemplate t5 = {"Adventure", "A cartographer discovers her latest map shows a mountain range that doesn't officially exist, three days' hike from where she stands.", "The map was wrong. It had to be - Kira had checked it against the survey records twice. Yet there it was, rising past the tree line exactly where the old cartographer's notes had warned her not to look: a mountain that wasn't supposed to be there."};
         templates.push_back(t5);
-        storyTemplate t6 = {"Psychological thriller", "A woman starts receiving messages from a number identical to her own, warning her about things before they happen.", "The message arrived at 3:07 AM, same as always. Mara stared at the screen, at the number that matched her own down to the last digit, and typed the only question that mattered: who are you?"};
+        storyTemplate t6 = {"Psychological Thriller", "A woman starts receiving messages from a number identical to her own, warning her about things before they happen.", "The message arrived at 3:07 AM, same as always. Mara stared at the screen, at the number that matched her own down to the last digit, and typed the only question that mattered: who are you?"};
         templates.push_back(t6);
         storyTemplate t7 = {"Comic", "A masked vigilante who's secretly terrified of heights, patrolling a city that's always one blackout away from chaos.", "The city lights flickered below as Nightshade crouched on the ledge, cape snapping in the wind. Somewhere in the maze of alleys, sirens wailed - but tonight, something else was hunting too."};
         templates.push_back(t7);
@@ -297,53 +379,171 @@ public:
         templates.push_back(t8);
     }
 
-    void showStoryCanvas() {
-        system("cls");
+    void startNewStory(string category, string username){
+        cout<<"\n[1] Use a Template" <<endl;
+        cout<<"[2] Use a prompt"<<endl;
+        cout<<"[3] Blank Canvas"<<endl;
+        cout<<"Choose: ";
+        int choice = getValidInput(1, 3);
+        storyTemplate selectedTemplate;
+        for(storyTemplate t: templates){
+            if(t.category == category){
+                selectedTemplate = t;
+                break;
+            }
+        }
+        string text;
+        if(choice==1){
+            text = selectedTemplate.templateText;
+            cout<<"\n"<<text;
+            cout<<"(CONTINUE...) "<<endl;
+            string continuition;
+            getline(cin,continuition);
+            text = text + " " + continuition;
+        }
+        else if(choice==2){
+            cout<<"PROMPT: "<<selectedTemplate.idea<<endl;
+            cout<<"(START...) "<<endl;
+            getline(cin,text);
+        }
+        else if(choice==3){
+            cout<<"(START YOUR OWN STORY...) "<<endl;
+            getline(cin,text);
+        }
+        if(text.empty()){
+            cout<<"TEXT CANNOT BE EMPTY! RETURNING TO MENU..."<<endl;
+            return;
+        }
+        int newID = paragraphs.size() + 1;
+        Paragraph newP(newID, text, username, 1, category);
+        paragraphs.push_back(newP);
+        cout<<"STORY SAVED! RETURNING BACK TO MENU..."<<endl;
+    }
+    void showCanvasByCategory(string category, bool showAuthors){
         sortParagraphs();
-        for (Paragraph p : paragraphs) {
-            cout << p.getText() << " ";
+        for(Paragraph p: paragraphs){
+        if(p.getcategory() == category){
+            if(showAuthors){
+                cout << p.getText() << " ( ~ " << p.getAuthor() << ")" << "\n\n";
+            } else {
+                cout << p.getText() << " ";
+            }
+            }
         }
     }
 
-    void showPitchRegistry() {
+    void showPitchesByCategory(string category) {
         cout << "+-----------------------------------------------------------+" << endl;
         int counter = 1;
         for (Pitch p : pitches) {
-            if (p.getStatus() == "Pending") {
+            if (p.getCategory() == category && p.getStatus() == "Pending") {
                 string line = to_string(counter) + ". " + p.getText() + " - " + p.getAuthor();
                 cout << "| " << setw(60) << left << line << "|" << endl;
                 counter++;
             }
         }
         cout << "+-----------------------------------------------------------+" << endl;
+        if(counter == 1){
+            cout<<"NO PENDING PITCHES IN THIS CATEGORY."<<endl;
+        }
     }
 };
 
 int main()
-{
-    // Testing Phase 02 / 03 / 04
+{   Database db;
     Session s;
-    s.login("Amna");
-    Database d;
-    Paragraph p(1, "This is the starting paragraph.", "Amna", 1);
-    d.addParagraph(p);
-
-    d.createPitch("This is my first pitch.", "Ali");
-    d.createPitch("This is my first pitch.", "Anum");
-
-    d.isEditor(s);
-    d.acceptPitch(1);
-    d.displayAllData();
-
-    d.showStoryCanvas();
-    cout << endl;
-    d.showPitchRegistry();
-
-    d.saveToFile();
-
-    Database a;
-    a.loadFromFile();
-    a.displayAllData();
-
+    db.loadFromFile();
+    cout<<"=========================================================================================="<<endl;
+    cout<<"                              WELCOME TO STORYFORGE                                       "<<endl;
+    cout<<"                        Where stories are built together                                  "<<endl;
+    cout<<"=========================================================================================="<<endl;
+    string username;
+    cout<<"ENTER YOUR USERNAME: ";
+    getline(cin,username);
+    s.login(username);
+    bool running = true;
+    while(running){
+        cout<<"\nWelcome, "<<username<<"!"<<endl;
+        cout<<"[1] View Menu"<<endl;
+        cout<<"[2] Exit"<<endl;
+        cout<<"Enter your Choice: ";
+        int choice = getValidInput(1, 2);
+        if (choice == 1){
+        cout<<"\n=============STORYFORGE MENU=============="<<endl;
+        cout<<"[1] Start new Story"<<endl;
+        cout<<"[2] Submit a Pitch"<<endl;
+        cout<<"[3] Read Stories"<<endl;
+        cout<<"[4] Review Pitches[Editor Only]"<<endl;
+        cout<<"[5] Exit"<<endl;
+        cout<<"Enter your Choice: ";
+        int menuChoice = getValidInput(1, 5);
+        if(menuChoice==1){
+            string category = selectCategory();
+            if(db.storyExists(category)){
+            cout<<"A STORY ALREADY EXISTS IN THIS CATEGORY! Use 'Submit a Pitch' to continue it."<<endl;
+            } else {
+            db.startNewStory(category, s.getCurrentUser());
+            }
+            cout<<endl;
+        }
+        else if(menuChoice==2){
+            string category = selectCategory();
+            if(!db.storyExists(category)){
+                cout<<"NO PREVIOUS STORY EXISTS! START A NEW STORY FIRST."<<endl;
+            }
+            else{
+                db.showCanvasByCategory(category, false);
+                cout<<"\n";
+                string pitchText;
+                cout<<"Write your Pitch: ";
+                getline(cin,pitchText);
+                if(pitchText.empty()){
+                    cout<<"PITCH CANNOT BE EMPTY!"<<endl;
+                }
+                else{
+                    db.createPitch(pitchText,s.getCurrentUser(), category);
+                    cout<<"PITCH SUBMITTED FOR "<<category<<" STORY! RETURNING BACK TO MENU..."<<endl;
+                }
+            }
+        }
+        else if(menuChoice==3){
+        string category = selectCategory();
+        if(!db.storyExists(category)){
+        cout<<"NO STORY EXISTS IN THIS CATEGORY YET!"<<endl;
+        }
+        else{
+        cout << "\n[1] Read as a flowing story" << endl;
+        cout << "[2] Read with author credits" << endl;
+        cout << "Choose: ";
+        int readChoice = getValidInput(1, 2);
+        bool showAuthors = (readChoice == 2);
+        db.showCanvasByCategory(category, showAuthors);
+        cout<<"\n";
+            }
+        }
+        else if(menuChoice==4){
+            string category = selectCategory();
+            if(db.isEditor(s, category)){
+                db.showPitchesByCategory(category);
+                cout<<"ENTER PITCH ID TO ACCEPT (0 TO CANCEL): ";
+                int pitchID = getValidInput(0, 9999);
+                if(pitchID!=0){
+                    db.acceptPitch(pitchID);
+                }
+            }
+            else{
+                cout<<"YOU ARE NOT THE EDITOR OF THIS STORY!"<<endl;
+            }
+        }
+        else if(menuChoice==5){
+            running = false;
+        }
+    }
+    else if(choice == 2){
+        running = false;
+    }
+}
+    db.saveToFile();
+    cout<<"STORY SAVED. GOODBYE, "<<s.getCurrentUser()<<"!"<<endl;
     return 0;
 }
