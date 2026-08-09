@@ -13,6 +13,13 @@
             "id": 2,
             "order_num": 1,
             "text": "The new house was perfect, except for the mirrors. Elena noticed it on the second night, her reflection was always a beat behind, still walking when she had already stopped."
+        },
+        {
+            "author": "Hamza Sheikh",
+            "category": "Sci-Fi",
+            "id": 3,
+            "order_num": 1,
+            "text": "The ship's engines failed just as the proximity alarm blared. 'ARIA,' Captain Reyes said carefully, 'why didn't you warn me sooner?' The AI's voice, when it came, sounded almost hesitant."
         }
     ],
     "Pitch": [
@@ -39,6 +46,30 @@
             "status": "Pending",
             "target_order_num": 2,
             "text": "She counted the mirrors in the hallway again. There had only ever been four. Tonight there were five."
+        },
+        {
+            "author": "Ali Raza",
+            "category": "Horror",
+            "id": 4,
+            "status": "Pending",
+            "target_order_num": 2,
+            "text": "The lights flickered once, and when they came back on, every mirror in the house was facing the wall."
+        },
+        {
+            "author": "Anum Fatima",
+            "category": "Sci-Fi",
+            "id": 5,
+            "status": "Pending",
+            "target_order_num": 2,
+            "text": "Captain Reyes checked the manifest again. There was no crew member named ARIA had ever seen before, and yet the logs showed nine years of shared history."
+        },
+        {
+            "author": "Sara Khan",
+            "category": "Sci-Fi",
+            "id": 6,
+            "status": "Pending",
+            "target_order_num": 2,
+            "text": "The alarm cut off mid-blare. In the silence that followed, every screen on the bridge displayed the same word: WAIT."
         }
     ]
 }
