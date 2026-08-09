@@ -1,19 +1,44 @@
 {
     "Paragraph": [
         {
-            "author": "System",
-            "category": "General",
-            "id": 1,
-            "order_num": 1,
-            "text": "The glowing terminal screen blinked in the empty computer lab..."
-        },
-        {
             "author": "Amna Iqbal",
             "category": "Fantasy",
+            "id": 1,
+            "order_num": 1,
+            "text": "In the kingdom of Eldenmoor, mist clung to every ancient stone. The old stories said the dragon beneath the mountain would wake only when the crown chose an unworthy heir and tonight, the crown had chosen. The bells tolled once. Then again. The sound rolled down the valley and cracked against the palace walls like a warning."
+        },
+        {
+            "author": "Sara Khan",
+            "category": "Horror",
             "id": 2,
             "order_num": 1,
-            "text": "In the kingdom of Eldenmoor, mist clung to every ancient stone. The old stories said the dragon beneath the mountain would wake only when the crown chose an unworthy heir and tonight, the crown had chosen. The bells tolled once.Then again.The sound rolled down the valley and cracked against the palace walls like a warning."
+            "text": "The new house was perfect, except for the mirrors. Elena noticed it on the second night, her reflection was always a beat behind, still walking when she had already stopped."
         }
     ],
-    "Pitch": []
+    "Pitch": [
+        {
+            "author": "Ali Raza",
+            "category": "Fantasy",
+            "id": 1,
+            "status": "Pending",
+            "target_order_num": 2,
+            "text": "The guards froze at the gate, torches flickering, as a low growl rolled out from beneath the cobblestones."
+        },
+        {
+            "author": "Anum Fatima",
+            "category": "Fantasy",
+            "id": 2,
+            "status": "Pending",
+            "target_order_num": 2,
+            "text": "No one moved. The young princess stepped forward instead, placing her palm flat against the cold stone floor."
+        },
+        {
+            "author": "Hamza Sheikh",
+            "category": "Horror",
+            "id": 3,
+            "status": "Pending",
+            "target_order_num": 2,
+            "text": "She counted the mirrors in the hallway again. There had only ever been four. Tonight there were five."
+        }
+    ]
 }
