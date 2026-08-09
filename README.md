@@ -1,65 +1,71 @@
-# ZeroToShip
 # StoryForge (CLI Edition)
 
-A collaborative story-writing app for the command line. Multiple people build one story together, paragraph by paragraph — whoever wrote the last accepted paragraph gets to pick the next one from submitted pitches.
+A collaborative story-writing application where multiple users build stories together, paragraph by paragraph, across different genres. Whoever wrote the last accepted paragraph in a story acts as that story's editor, choosing which submitted pitch continues it next.
 
-Built in phases for practice with OOP, sorting, file I/O, and terminal UI.
+## Overview
 
-## Phase 1
+Users pick a genre category (Fantasy, Sci-Fi, Crime/Mystery, Romance, Adventure, Psychological Thriller, Comic, Horror) and either start a new story there or continue an existing one. A story can be started from a genre template, a one-line prompt, or a blank page. Anyone can submit a pitch to continue a story; the story's editor reviews pending pitches through a bordered pitch registry and accepts one, which becomes the next paragraph — automatically rejecting every other pitch competing for that same position. Everything persists to a local JSON file, so stories carry over between sessions.
 
-This phase is just the data models and serialization.
+**Technologies used:** C++ (standard library — `vector`, `algorithm`, `iomanip`, `fstream`)
 
-- Paragraph class ( id , text , author, order_num)
-- Pitch class ( id , target_order_num, text, author, status)
-- to_dict() / from_dict() on both, using nlohmann/json
-- Basic input validation in the constructors (throws on bad data)
-- display() for printing objects nicely
-- main() in StoryForge.cpp manually tests all of the above
+**External libraries:**
+- [nlohmann/json](https://github.com/nlohmann/json) — JSON serialization and file persistence
+- [FTXUI](https://github.com/ArthurSonzogni/FTXUI) — terminal UI library powering the interactive bordered screens, menus, and text inputs
 
-## Running it
+## Features
 
-Needs json.hpp (nlohmann/json) in the same folder.
+- Multiple parallel stories, one per genre category, all in a single save file
+- Three ways to start a story: genre template, one-line prompt, or blank page
+- Pitch submission and review through an interactive, bordered pitch registry
+- Editor access control — only the author of a category's latest paragraph can accept/reject pitches for it, and can't accept their own pitch
+- Two reading modes: flowing story view or with author credits shown
+- Full input validation, both at the data-model level (constructors) and the UI level (menus reject invalid input)
+- Persistent storage to `story_db.json`, with an automatic fallback starter paragraph generated if no save file exists yet
+- Interactive FTXUI terminal interface: splash screen, login, arrow-key menus, bordered panels
 
-g++ StoryForge.cpp -o StoryForge -std=c++11
+## Project Structure
+
+Built in phases:
+- **Phase 1** — `Paragraph`/`Pitch` data models with validation and JSON serialization
+- **Phase 2** — `Session` (user tracking) and `Database` (file persistence) with editor access-control checks
+- **Phase 3** — chronological sorting and the accept-pitch pipeline (creates a paragraph, rejects competing pitches)
+- **Phase 4** — terminal presentation layer (story canvas, ASCII-bordered pitch registry) using mock data
+- **Phase 5** — full integration: FTXUI-based interactive interface, category system, mock data replaced with live user input and file persistence, automatic fallback starter record
+
+## Installation & Running
+
+**Requirements:**
+- A C++ compiler supporting C++17 or later
+- [`json.hpp`](https://github.com/nlohmann/json) (nlohmann/json, single header) in the project folder
+- [FTXUI](https://github.com/ArthurSonzogni/FTXUI) installed and linked (via CMake `FetchContent` or vcpkg)
+
+**Example build (CMake):**
+```bash
+mkdir build && cd build
+cmake ..
+cmake --build .
 ./StoryForge
+```
 
-
-## Phase 2
-
-Backend layer for identity tracking and file storage.
-
-- A Session class that tracks the currently loggedin user (login(), getCurrentUser())
-- A Database class that holds all paragraphs and pitches, with:
-  addParagraph() / addPitch()
-  saveToFile() / loadFromFile() (reads and writes everything to story_db.json)
-- isEditor() which checks whether the current session user matches the author of the latest paragraph before allowing pitch moderation
-- displayAllData() that prints all loaded paragraphs and pitches
-- setStatus() added to Pitch for updating a pitch's status after moderation
-- main() in StoryForge.cpp manually tests all of the above functions (logging in, adding data, checking editor access, saving, and reloading from file.)
-
-## Running it
-
-Needs json.hpp (nlohmann/json) in the same folder.
-
-g++ StoryForge.cpp -o StoryForge -std=c++11
+If building directly with a compiler and FTXUI already installed on your system:
+```bash
+g++ StoryForge.cpp -o StoryForge -std=c++17 -lftxui-component -lftxui-dom -lftxui-screen
 ./StoryForge
+```
 
+## How to Test the Full Feature Set
 
-## Phase 3
+1. Run the app — a splash screen appears, then a login screen. Enter a username.
+2. From the main menu, select **Start New Story**, pick a category, and try each starting mode (template / prompt / blank page).
+3. Select **Submit a Pitch** on the same category (using a different username makes the editor check more realistic) to add a competing continuation.
+4. Select **Read Stories** to view the story in both flowing and author-credit modes.
+5. Log in as the original author and select **Review Pitches [Editor Only]** to see the pitch registry and accept a pitch — confirm the story grows and competing pitches in that category get rejected.
+6. Exit and re-run the app — the story should reload from `story_db.json` exactly as it was left.
 
-Core story logic — sorting and the accept/reject pipeline.
+## Future Scope
 
-- sortParagraphs() function that sorts paragraphs by order_num using std::sort with a lambda
-- acceptPitch(pitchId) — the main pipeline:
-- creates a new Paragraph from the accepted pitch (order_num = latest + 1)
-- rejects every other pitch competing for that same position
-- handles edge cases: no paragraphs yet, or pitch ID not found
-- createPitch(text, author) — automatically calculates a new pitch's id and target_order_num, so the caller never has to guess or assign them manually
-- main() in StoryForge.cpp manually tests all of the above (logging in, adding data, checking editor access, saving/reloading from file, and running the accept-pitch pipeline on competing pitches.)
+- User accounts with persistent history — viewing past stories and pitches per user
+- A voting/consensus system so multiple users weigh in on a pitch before it's accepted, instead of a single editor deciding
+- Networked/multiplayer support so users on different machines can collaborate on the same story in real time
+- Exporting finished stories to shareable formats like PDF or EPUB
 
-## Running it
-
-Needs json.hpp (nlohmann/json) in the same folder.
-
-g++ StoryForge.cpp -o StoryForge -std=c++11
-./StoryForge
